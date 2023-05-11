@@ -44,6 +44,8 @@ def save_and_plot(net, loss_test, loss_train, label, directory_name, bsm_name, t
     fig.savefig(f'{directory_name}/ROC_{label}.png')
     plt.clf()
     
+    plt.close()
+    
     f = open(f'{directory_name}/performance_{label}.txt','w+')
     f.write(    
         'Area under ROC: ' + str(auc) + '\n' + 

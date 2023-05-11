@@ -41,7 +41,7 @@ def main():
     dedicated = torch.load(f'{args.signal}/{signal}', map_location=torch.device('cpu'))
     dedicated_score = dedicated(features).detach().numpy()
     fig, ax = plt.subplots(1, 1, figsize=[14,8])
-    dedicated_sm,_,_  = ax.hist(dedicated_score, weights=sm_weight.detach() , bins=bins , alpha=0.5, label="SM" , density=True)
+    dedicated_sm,bins,_  = ax.hist(dedicated_score, weights=sm_weight.detach() , bins=200 , alpha=0.5, label="SM" , density=True)
     dedicated_bsm,_,_ = ax.hist(dedicated_score, weights=bsm_weight.detach(), bins=bins, alpha=0.5, label="BSM", density=True)
     ax.legend()
     fig.savefig(f"{directory_name}/hist_dedicated.png")
@@ -49,11 +49,15 @@ def main():
 
     
     cum_parametric_sm  = np.cumsum( parametric_sm  )
+    cum_parametric_sm = cum_parametric_sm/cum_parametric_sm[-1]
     cum_parametric_bsm = np.cumsum( parametric_bsm )
+    cum_parametric_bsm = cum_parametric_bsm/cum_parametric_bsm[-1]
 
     cum_dedicated_sm  = np.cumsum( dedicated_sm  )
+    cum_dedicated_sm = cum_dedicated_sm/cum_dedicated_sm[-1]
     cum_dedicated_bsm = np.cumsum( dedicated_bsm )
-
+    cum_dedicated_bsm = cum_dedicated_bsm/cum_dedicated_bsm[-1]
+    
     fig, ax = plt.subplots(1, 1, figsize=[8,8])
     ax.plot( cum_parametric_sm, cum_parametric_bsm, label="Parametric discriminator")
     ax.plot( cum_dedicated_sm, cum_dedicated_bsm, label="Dedicated discriminator")
