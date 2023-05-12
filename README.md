@@ -23,14 +23,30 @@ pip install torch
 Examples of usage would be 
 
 ```
-python train.py --name training_v1 --term ctg_ctg --files '/path/to/files/*.root'
-python train.py --name training_v1 --bsm-point ctg=1 --files '/path/to/files/*.root'
+python train.py --term ctq8_ctq8 --epochs 50 --name ctq8_ctq8
 ```
+
+to train a NN discriminating SM against the `ctq8^2` term, or 
+
+```
+python train.py --bsm-point ctq8=16 --epochs 50 --name ctq8_16
+python train.py --bsm-point ctq8=12 --epochs 50 --name ctq8_12
+python train.py --bsm-point ctq8=8 --epochs 50 --name ctq8_8
+python train.py --bsm-point ctq8=4 --epochs 50 --name ctq8_4
+```
+
+to train different NNs discriminating the SM against `ctq8=4,8,12,16` scenarios.
 
 The data is provided through `rootfiles` that are converted to `pytorch` tensors. The tensors are stored in separate files for the input features, the SM weights and the BSM weights, the latter with a name specific to the BSM point / term chosen. If any of these need to be reproduced, the associated file can be erased or pass the argument `--forceRebuild`
 
 
-The example above allows to parametrize the likelihood as a function of `ctg`. The procedure to do so is implemented in `utils/buildLikelihood.py` (modulo cross-terms in the likelihood, to do), which takes a `yaml` file describing the networks trained in the previous step.
+The example above allows to parametrize the likelihood as a function of `ctq8`. The procedure to do so is implemented in `utils/buildLikelihood.py` (modulo cross-terms in the likelihood, to do), which takes a `yaml` file describing the networks trained in the previous step.
+
+A ROC curve comparing a dedicated discriminator (the one trained against `ctq8=16`) against the optimal observable given by the regressed likelihood ratio. 
+
+```
+python do_roc.py --likelihood examples/ctq8_regression.yaml  --bsm-point ctq8=16   --dedicated ctq8_16/network_bsm_weight_ctq8_16_last.p --name regressed_likelihood_16
+```
 
 ## To do
 

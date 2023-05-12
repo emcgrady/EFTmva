@@ -55,7 +55,7 @@ def save_and_plot(net, loss_test, loss_train, label, directory_name, bsm_name, t
 
 def main():
 
-    args, directory_name = handleOptions()
+    args = handleOptions()
 
 
     # Now we decide how (if) we will use the gpu
@@ -92,10 +92,10 @@ def main():
         loss_train.append( model.cost_from_batch(train[:][2] , train[:][0],  train[:][1], args.device).item())
         loss_test .append( model.cost_from_batch(test [:][2] , test [:][0],  test [:][1], args.device).item())
         if epoch%200==0: 
-            save_and_plot( model.net, loss_test, loss_train, f"epoch_{epoch}", f"{directory_name}", signal_dataset.bsm_name,
+            save_and_plot( model.net, loss_test, loss_train, f"epoch_{epoch}", f"{args.name}", signal_dataset.bsm_name,
                          test)
 
-    save_and_plot( model.net, loss_test, loss_train, "last", f"{directory_name}", signal_dataset.bsm_name, test)
+    save_and_plot( model.net, loss_test, loss_train, "last", f"{args.name}", signal_dataset.bsm_name, test)
     
 if __name__=="__main__":
     main()

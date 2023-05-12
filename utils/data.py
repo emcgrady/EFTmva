@@ -114,7 +114,9 @@ class eftDataLoader( data.Dataset ):
         # writing tensors to file
         for output in outputs:
             t = torch.from_numpy( outputs[output] )
-            torch.save( t, f'{self.out_path}/{output}.p') # can certainly be improved
+            torch.save( t, f'/scratch/{output}.p') # can certainly be improved
+            os.system(f'xrdcp /scratch/{output}.p root://t3dcachedb.psi.ch:1094//{self.out_path}/')
+            os.system(f'rm /scratch/{output}.p')
 
     def load_tensors(self):
         self.sm_weight  = torch.load( f'{self.out_path}/sm_weight.p').to(device = self.device)
