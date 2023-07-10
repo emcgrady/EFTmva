@@ -114,18 +114,9 @@ class eftDataLoader( data.Dataset ):
         # writing tensors to file
         for output in outputs:
             t = torch.from_numpy( outputs[output] )
-            torch.save( t, f'/scratch/{output}.p') # can certainly be improved
-            os.system(f'xrdcp /scratch/{output}.p root://t3dcachedb.psi.ch:1094//{self.out_path}/')
-            os.system(f'rm /scratch/{output}.p')
+            torch.save( t, f'{self.out_path}/{output}.p')
 
     def load_tensors(self):
         self.sm_weight  = torch.load( f'{self.out_path}/sm_weight.p').to(device = self.device)
         self.bsm_weight = torch.load( f'{self.out_path}/{self.bsm_name}.p').to(device = self.device)
         self.features   = torch.load( f'{self.out_path}/features.p').to(device = self.device)
-
-
-if __name__=="__main__":
-    
-    data = eftDataLoader("/pnfs/psi.ch/cms/trivcat/store/user/sesanche//EFT_mva/ttbar/NanoGen_tt_LO_SMEFTrwgt_v2_postprocess/*.root", term=("ctq8","sm"), bsm_point=None, device='cpu', forceRebuild=True, wc_list=["sm","ctu1","cqd1","cqq13","ctu8","cqu1","cqq11","cqq83","ctd1","ctd8","ctg","ctq1","cqq81","cqu8","cqd8","ctq8"], feature_list=['Lep1_pt','Lep1_eta']  )
-    print(len(data))
-    print(data[2])

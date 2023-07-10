@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import torch
 from torch.utils.data import DataLoader
 import numpy as np 
@@ -17,22 +20,22 @@ def save_and_plot(net, loss_test, loss_train, label, directory_name, bsm_name, t
     ax.legend()
     fig.savefig(f'{directory_name}/loss_{label}.png')
     plt.clf()
-
+    
     fig, ax = plt.subplots(1, 1, figsize=[12,7])
     bins = np.linspace(0,1,100)
-    sm_hist,_,_  = ax.hist(net(test[:][2]).flatten().detach().numpy(), 
-                           weights=test[:][0], bins=bins, alpha=0.5, 
-                           label='SM', density=True)
     
-    bsm_hist,_,_ = ax.hist(net(test[:][2]).flatten().detach().numpy(), 
-                           weights=test[:][1], bins=bins, alpha=0.5, 
-                           label='BSM', density=True)
+    sm_hist,_,_  = ax.hist(net(test[:][2]).flatten().detach().cpu().numpy(),
+                           weights=test[:][0].detach().cpu().numpy(),
+                           bins=bins, alpha=0.5, label='SM', density=True)
+    bsm_hist,_,_ = ax.hist(net(test[:][2]).flatten().detach().cpu().numpy(),
+                           weights=test[:][1].detach().cpu().numpy(),
+                           bins=bins, alpha=0.5, label='BSM', density=True)
     ax.set_xlabel('Network Output', fontsize=12)
     ax.legend()
     fig.savefig(f'{directory_name}/net_out_{label}.png')
     plt.clf()
     
-    roc, auc, a = net_eval(bins, sm_hist, bsm_hist, n_points=100)
+    roc, auc, a = net_eval(bins, sm_hist, bsm_hist)
     
     fig, ax = plt.subplots(1, 1, figsize=[8,8])
     ax.plot(roc[:,0], roc[:,1], label='Network Performance')
@@ -81,10 +84,11 @@ def main():
     optimizer = optim.SGD(model.net.parameters(), lr=args.learning_rate, momentum=args.momentum)
 
 
-    loss_train = []; loss_test=[]
-    for epoch in range(args.epochs):
+    loss_train = [model.cost_from_batch(train[:][2] , train[:][0],  train[:][1], args.device).item()]
+    loss_test  = [model.cost_from_batch(test [:][2] , test [:][0],  test [:][1], args.device).item()]
+    for epoch in tqdm(range(args.epochs)):
         
-        for i,(sm_weight, bsm_weight, features) in tqdm(enumerate(dataloader)):
+        for i,(sm_weight, bsm_weight, features) in enumerate(dataloader):
             optimizer.zero_grad()
             loss = model.cost_from_batch(features, sm_weight, bsm_weight, args.device)
             loss.backward()
