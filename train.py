@@ -72,20 +72,20 @@ def main():
     # all the stuff below should be configurable in the future
     # we get the model = net + cost function
     from models.net import Model
-    model=Model(features = len(args.features.split(",")), device=args.device)
+    model = Model(features = len(args.features.split(",")), device = args.device)
 
     # now we get the data
     from utils.data import eftDataLoader
     signal_dataset = eftDataLoader( args )
-    train,test  = torch.utils.data.random_split( signal_dataset, [0.7, 0.3], generator=torch.Generator().manual_seed(42))
+    train, test    = torch.utils.data.random_split( signal_dataset, [0.7, 0.3], generator=torch.Generator().manual_seed(42))
     dataloader     = DataLoader(  train  , batch_size=args.batch_size, shuffle=True)
 
 
     optimizer = optim.SGD(model.net.parameters(), lr=args.learning_rate, momentum=args.momentum)
 
 
-    loss_train = [model.cost_from_batch(train[:][2] , train[:][0],  train[:][1], args.device).item()]
-    loss_test  = [model.cost_from_batch(test [:][2] , test [:][0],  test [:][1], args.device).item()]
+    loss_train = [model.cost_from_batch(train[:][2] , train[:][0], train[:][1], args.device).item()]
+    loss_test  = [model.cost_from_batch(test[:][2] , test[:][0], test[:][1], args.device).item()]
     for epoch in tqdm(range(args.epochs)):
         
         for i,(sm_weight, bsm_weight, features) in enumerate(dataloader):
@@ -93,8 +93,8 @@ def main():
             loss = model.cost_from_batch(features, sm_weight, bsm_weight, args.device)
             loss.backward()
             optimizer.step()
-        loss_train.append( model.cost_from_batch(train[:][2] , train[:][0],  train[:][1], args.device).item())
-        loss_test .append( model.cost_from_batch(test [:][2] , test [:][0],  test [:][1], args.device).item())
+        loss_train.append( model.cost_from_batch(train[:][2], train[:][0], train[:][1], args.device).item())
+        loss_test .append( model.cost_from_batch(test[:][2] , test[:][0], test[:][1], args.device).item())
         if epoch%200==0: 
             save_and_plot( model.net, loss_test, loss_train, f"epoch_{epoch}", f"{args.name}", signal_dataset.bsm_name,
                          test)
