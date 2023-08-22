@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch 
 
-cost =  nn.BCELoss( reduction='mean')
+cost =  nn.BCELoss( reduction='sum')
 
 class Net(nn.Module):
     def __init__(self, features, device):
@@ -23,7 +23,7 @@ class Net(nn.Module):
 
 class Model:
     def __init__(self, features, device):
-        self.net = Net(features, device=device)
+        self.net  = Net(features, device=device)
         self.label = torch.tensor([[0],[1]], device=device, dtype=torch.float32)
 
     def cost_from_batch(self, features, weight_sm, weight_bsm, device ): 
@@ -33,4 +33,4 @@ class Model:
         combined_weight = torch.minimum( combined_weight, 1e3*torch.median(combined_weight)) # some regularization :) 
 
         cost.weight = combined_weight
-        return cost( self.net(combined_features).flatten(), self.label.expand(2, weight_sm.shape[0]).flatten())
+        return cost( self.net(combined_features).ravel(), self.label.expand(2, weight_sm.shape[0]).ravel())

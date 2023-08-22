@@ -49,6 +49,7 @@ def handleOptions():
     parser.add_argument("--term",  type=str, default=None, help="Train SM against a given term")
     parser.add_argument("--learning-rate", type=float, default=0.00000005, help="Optimizer learning rate")
     parser.add_argument("--momentum", type=float, default=0.9, help="Momentum for optimizer")
+    parser.add_argument("--profile", type=bool, default=False, help="Set to True to profile the network")
 
     return parse(parser)
 

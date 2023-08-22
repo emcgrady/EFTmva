@@ -10,6 +10,9 @@ import matplotlib.pyplot as plt
 from utils.options import handleOptions
 from utils.metrics import net_eval
 
+import torchvision.models as models
+from torch.profiler import profile, record_function, ProfilerActivity
+
 def save_and_plot(net, loss_test, loss_train, label, directory_name, bsm_name, test):
 
     fig, ax = plt.subplots(1, 1, figsize=[8,8])
@@ -24,10 +27,10 @@ def save_and_plot(net, loss_test, loss_train, label, directory_name, bsm_name, t
     fig, ax = plt.subplots(1, 1, figsize=[12,7])
     bins = np.linspace(0,1,100)
     
-    sm_hist,_,_  = ax.hist(net(test[:][2]).flatten().detach().cpu().numpy(),
+    sm_hist,_,_  = ax.hist(net(test[:][2]).ravel().detach().cpu().numpy(),
                            weights=test[:][0].detach().cpu().numpy(),
                            bins=bins, alpha=0.5, label='SM', density=True)
-    bsm_hist,_,_ = ax.hist(net(test[:][2]).flatten().detach().cpu().numpy(),
+    bsm_hist,_,_ = ax.hist(net(test[:][2]).ravel().detach().cpu().numpy(),
                            weights=test[:][1].detach().cpu().numpy(),
                            bins=bins, alpha=0.5, label='BSM', density=True)
     ax.set_xlabel('Network Output', fontsize=12)
@@ -83,22 +86,30 @@ def main():
 
     optimizer = optim.SGD(model.net.parameters(), lr=args.learning_rate, momentum=args.momentum)
 
-
     loss_train = [model.cost_from_batch(train[:][2] , train[:][0], train[:][1], args.device).item()]
     loss_test  = [model.cost_from_batch(test[:][2] , test[:][0], test[:][1], args.device).item()]
     for epoch in tqdm(range(args.epochs)):
-        
         for i,(sm_weight, bsm_weight, features) in enumerate(dataloader):
-            optimizer.zero_grad()
-            loss = model.cost_from_batch(features, sm_weight, bsm_weight, args.device)
-            loss.backward()
-            optimizer.step()
+            if args.profile and ((epoch == 0) and (i == 0)):
+                with profile(activities=[ProfilerActivity.CPU], record_shapes=True) as prof:
+                    with record_function('model_inference'):
+                        optimizer.zero_grad()
+                        loss = model.cost_from_batch(features, sm_weight, bsm_weight, args.device)
+                        loss.backward()
+                        optimizer.step()
+                text_file = open(f'{args.name}/network_profile.txt', 'w')
+                n = text_file.write(prof.key_averages().table(sort_by='cpu_time_total'))
+                text_file.close()
+            else: 
+                optimizer.zero_grad()
+                loss = model.cost_from_batch(features, sm_weight, bsm_weight, args.device)
+                loss.backward()
+                optimizer.step()
         loss_train.append( model.cost_from_batch(train[:][2], train[:][0], train[:][1], args.device).item())
         loss_test .append( model.cost_from_batch(test[:][2] , test[:][0], test[:][1], args.device).item())
         if epoch%200==0: 
-            save_and_plot( model.net, loss_test, loss_train, f"epoch_{epoch}", f"{args.name}", signal_dataset.bsm_name,
-                         test)
-
+            save_and_plot( model.net, loss_test, loss_train, f"epoch_{epoch}", f"{args.name}", signal_dataset.bsm_name, test)
+            
     save_and_plot( model.net, loss_test, loss_train, "last", f"{args.name}", signal_dataset.bsm_name, test)
     
 if __name__=="__main__":

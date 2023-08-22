@@ -28,8 +28,10 @@ def main():
     param_score = np.maximum(-1000,np.minimum(1000,param_score))
     fig, ax = plt.subplots(1, 1, figsize=[14,8])
     param_score = 1-param_score
-    parametric_sm,bins,_  = ax.hist(param_score, weights=sm_weight.detach() , bins=2000 , alpha=0.5, label="SM" , density=True)
-    parametric_bsm,_,_ = ax.hist(param_score, weights=bsm_weight.detach(), bins=bins, alpha=0.5, label="BSM", density=True)
+    parametric_sm,bins,_  = ax.hist(param_score, weights=sm_weight.detach().numpy(), 
+                                    bins=200 , alpha=0.5, label="SM" , density=True)
+    parametric_bsm,_,_ = ax.hist(param_score, weights=bsm_weight.detach().numpy(),
+                                 bins=bins, alpha=0.5, label="BSM", density=True)
     ax.legend()
     fig.savefig(f"{args.name}/hist.png")
     fig.clf()
@@ -38,8 +40,10 @@ def main():
     dedicated = torch.load(f'{args.dedicated}', map_location=torch.device('cpu'))
     dedicated_score = dedicated(features).detach().numpy()
     fig, ax = plt.subplots(1, 1, figsize=[14,8])
-    dedicated_sm,bins,_  = ax.hist(dedicated_score, weights=sm_weight.detach() , bins=200 , alpha=0.5, label="SM" , density=True)
-    dedicated_bsm,_,_ = ax.hist(dedicated_score, weights=bsm_weight.detach(), bins=bins, alpha=0.5, label="BSM", density=True)
+    dedicated_sm,bins,_  = ax.hist(dedicated_score, weights=sm_weight.detach().numpy(),
+                                   bins=200 , alpha=0.5, label="SM" , density=True)
+    dedicated_bsm,_,_ = ax.hist(dedicated_score, weights=bsm_weight.detach().numpy(),
+                                bins=bins, alpha=0.5, label="BSM", density=True)
     ax.legend()
     fig.savefig(f"{args.name}/hist_dedicated.png")
     fig.clf()
