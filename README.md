@@ -50,7 +50,6 @@ python do_roc.py --likelihood examples/ctq8_regression.yaml  --bsm-point ctq8=16
 
 ## To do
 
-* Implement crossed terms in `buildLikelihood.py`.
 * Update dataloader to `IterableDataset` for when we need to handle larger datasets.
 * Fetch list of WC from sample directly, if possible.
 * Read list of input variables, network architecture, regularization from configuration files.
