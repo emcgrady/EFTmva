@@ -57,17 +57,22 @@ class full_likelihood:
         if set(self.wcs)!=set(coef_values.keys()):
             print(self.wcs, coef_values.keys())
             raise RuntimeError(f"The coefs passed to the likelihood do not align with those used in the likelihood parametrization")
+            
+        no_linear = ['ctu1', 'cqd1', 'cqq13', 'cqu1', 'cqq11', 'ctd1', 'ctq1']
         linear_term={}; quadratic_term={}
         likelihood_ratio = torch.ones_like(features[:,0])
         
         for wc in self.wcs:
-            linear_term[wc]    = (self.linear[wc](features)*coef_values[wc]).flatten()
             quadratic_term[wc] = (self.quadratic[wc](features)*coef_values[wc]*coef_values[wc]).flatten()
-            likelihood_ratio   = likelihood_ratio + linear_term[wc] + quadratic_term[wc]
+            likelihood_ratio   = likelihood_ratio + quadratic_term[wc]
+            
+            if wc not in no_linear:
+                linear_term[wc]    = (self.linear[wc](features)*coef_values[wc]).flatten()
+                likelihood_ratio   = likelihood_ratio + linear_term[wc]
             
         if len(self.wcs) > 1:
             cross_term       = (self.crossed(features)*coef_values[self.wcs[0]]*coef_values[self.wcs[1]]).flatten()
             likelihood_ratio = likelihood_ratio + cross_term
 
-        return 1/(likelihood_ratio+1)
+        return likelihood_ratio
         
