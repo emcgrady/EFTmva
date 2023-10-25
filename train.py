@@ -38,7 +38,7 @@ def save_and_plot(net, loss_test, loss_train, label, directory_name, bsm_name, t
     fig.savefig(f'{directory_name}/net_out_{label}.png')
     plt.clf()
     
-    roc, auc, a = net_eval(bins, sm_hist, bsm_hist)
+    roc, auc, a = net_eval(net(test[:][2]).ravel().detach().cpu().numpy(), test[:][0], test[:][1])
     
     fig, ax = plt.subplots(1, 1, figsize=[8,8])
     ax.plot(roc[:,0], roc[:,1], label='Network Performance')
