@@ -1,11 +1,10 @@
-from scipy.stats import ks_2samp
-import numpy as np
+import torch
 
 def net_eval(out, sm, bsm, threshold=0.5, n_points=200):
     
     sm_hist, bsm_hist = make_hist(out, sm, bsm, n_points)
     
-    roc, auc = make_roc(sm_hist, bsm_hist)
+    roc, auc = make_roc(sm_hist, bsm_hist, n_points)
     
     a   = (sm[(out <= threshold).flatten()].sum() + bsm[(out >= threshold).flatten()].sum())/(sm.sum() + bsm.sum())
     
@@ -14,7 +13,7 @@ def net_eval(out, sm, bsm, threshold=0.5, n_points=200):
 
 def make_hist(out, sm, bsm, n_points):
     
-    sort_ind = np.argsort(out, axis=0)
+    sort_ind = torch.argsort(out, axis=0)
     
     bsm       = bsm[sort_ind]
     sm        = sm[sort_ind]
@@ -24,23 +23,23 @@ def make_hist(out, sm, bsm, n_points):
     disc = len(bsm)%n_points
     
     if disc == 0:
-        bsm = np.sum(np.array_split(bsm, n_points), axis=1)
-        sm  = np.sum(np.array_split(sm,  n_points), axis=1)
+        bsm = torch.sum(torch.tensor_split(bsm, n_points), axis=1)
+        sm  = torch.sum(torch.tensor_split(sm,  n_points), axis=1)
         
     else:
-        bsm = np.concatenate([np.sum(np.array_split(bsm, n_points)[:disc]),
-                              np.sum(np.array_split(bsm, n_points)[disc:])])
-        sm  = np.concatenate([np.sum(np.array_split(sm, n_points)[:disc]),
-                              np.sum(np.array_split(sm, n_points)[disc:])])
+        bsm = torch.cat((torch.sum(torch.stack(torch.tensor_split(bsm, n_points)[:disc]), axis=1),
+                         torch.sum(torch.stack(torch.tensor_split(bsm, n_points)[disc:]), axis=1)), axis=0)
+        sm  = torch.cat((torch.sum(torch.stack(torch.tensor_split(sm,  n_points)[:disc]), axis=1),
+                         torch.sum(torch.stack(torch.tensor_split(sm,  n_points)[disc:]), axis=1)), axis=0)
 
     return sm, bsm
 
-def make_roc(sm_hist, bsm_hist):
+def make_roc(sm_hist, bsm_hist, n_points):
     
-    roc = np.array([np.cumsum(sm_hist), np.cumsum(bsm_hist)]).transpose()
-    roc /= roc[-1]
-    roc = 1 - roc
+    roc = torch.cat((torch.cumsum(sm_hist, dim=0).reshape(n_points,1),
+                     torch.cumsum(bsm_hist, dim=0).reshape(n_points,1)), axis=1)
+    roc = 1 - roc/roc[-1]
 
-    auc = -np.trapz(roc[:,1], x=roc[:,0])
+    auc = -torch.trapz(roc[:,1], x=roc[:,0])
     
     return roc, auc   

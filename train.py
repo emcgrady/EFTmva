@@ -25,11 +25,10 @@ def save_and_plot(net, loss_test, loss_train, label, directory_name, bsm_name, t
     plt.clf()
     
     fig, ax = plt.subplots(1, 1, figsize=[12,7])
-    bins = np.linspace(0,1,100)
     
-    sm_hist,_,_  = ax.hist(net(test[:][2]).ravel().detach().cpu().numpy(),
+    sm_hist,bins,_  = ax.hist(net(test[:][2]).ravel().detach().cpu().numpy(),
                            weights=test[:][0].detach().cpu().numpy(),
-                           bins=bins, alpha=0.5, label='SM', density=True)
+                           bins=100, alpha=0.5, label='SM', density=True)
     bsm_hist,_,_ = ax.hist(net(test[:][2]).ravel().detach().cpu().numpy(),
                            weights=test[:][1].detach().cpu().numpy(),
                            bins=bins, alpha=0.5, label='BSM', density=True)
@@ -38,7 +37,7 @@ def save_and_plot(net, loss_test, loss_train, label, directory_name, bsm_name, t
     fig.savefig(f'{directory_name}/net_out_{label}.png')
     plt.clf()
     
-    roc, auc, a = net_eval(net(test[:][2]).ravel().detach().cpu().numpy(), test[:][0], test[:][1])
+    roc, auc, a = net_eval(net(test[:][2]), test[:][0], test[:][1])
     
     fig, ax = plt.subplots(1, 1, figsize=[8,8])
     ax.plot(roc[:,0], roc[:,1], label='Network Performance')
