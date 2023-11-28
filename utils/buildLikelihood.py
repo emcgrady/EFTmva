@@ -40,11 +40,15 @@ class full_likelihood:
 
         self.wcs = self.configuration['wcs'].split(",")
         self.quadratic = {}; self.linear={}; value_forlinear={}; net_forlinear={}
+        self.no_lin = ['ctu1', 'cqd1', 'cqq13', 'cqu1', 'cqq11', 'ctd1', 'ctq1']
         
         for wc in self.wcs:
             self.quadratic[wc] = likelihood_term(torch.load(self.configuration[f'{wc}_quad'], map_location=torch.device('cpu')))
-            value_forlinear[wc], net_forlinear[wc] = self.configuration[f'{wc}_forlinear'].split(",")
-            self.linear[wc] = linear_term(self.quadratic[wc], likelihood_term(torch.load(net_forlinear[wc])), value_forlinear[wc])
+            if wc not in self.no_lin:
+                value_forlinear[wc], net_forlinear[wc] = self.configuration[f'{wc}_forlinear'].split(",")
+                self.linear[wc] = linear_term(self.quadratic[wc], 
+                                              likelihood_term(torch.load(net_forlinear[wc])), 
+                                              value_forlinear[wc])
                                                                               
         if len(self.wcs) > 1:
             self.crossed_net = torch.load(self.configuration[f'{self.wcs[0]}_{self.wcs[1]}_comb'])
@@ -58,7 +62,6 @@ class full_likelihood:
             print(self.wcs, coef_values.keys())
             raise RuntimeError(f"The coefs passed to the likelihood do not align with those used in the likelihood parametrization")
             
-        no_linear = ['ctu1', 'cqd1', 'cqq13', 'cqu1', 'cqq11', 'ctd1', 'ctq1']
         linear_term={}; quadratic_term={}
         likelihood_ratio = torch.ones_like(features[:,0])
         
@@ -66,7 +69,7 @@ class full_likelihood:
             quadratic_term[wc] = (self.quadratic[wc](features)*coef_values[wc]*coef_values[wc]).flatten()
             likelihood_ratio   = likelihood_ratio + quadratic_term[wc]
             
-            if wc not in no_linear:
+            if wc not in self.no_lin:
                 linear_term[wc]    = (self.linear[wc](features)*coef_values[wc]).flatten()
                 likelihood_ratio   = likelihood_ratio + linear_term[wc]
             
