@@ -94,6 +94,7 @@ def main():
 
 
     optimizer = optim.SGD(model.net.parameters(), lr=args.learning_rate, momentum=args.momentum)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', verbose=True)
 
     loss_train = [model.cost_from_batch(train[:][2] , train[:][0], train[:][1], args.device).item()]
     loss_test  = [model.cost_from_batch(test[:][2] , test[:][0], test[:][1], args.device).item()]
@@ -116,6 +117,7 @@ def main():
                 optimizer.step()
         loss_train.append( model.cost_from_batch(train[:][2], train[:][0], train[:][1], args.device).item())
         loss_test .append( model.cost_from_batch(test[:][2] , test[:][0], test[:][1], args.device).item())
+        scheduler.step(loss_train[epoch])
         if epoch%200==0: 
             save_and_plot( model.net, loss_test, loss_train, f"epoch_{epoch}", f"{args.name}", signal_dataset.bsm_name, test)
             
