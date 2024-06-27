@@ -27,8 +27,11 @@ class Model:
         self.label = torch.tensor([[0],[1]], device=device, dtype=torch.float32)
 
     def cost_from_batch(self, features, weight_sm, weight_bsm, device ): 
+        weight_bsm = torch.maximum(weight_bsm, torch.tensor(0))
+        
         combined_features = torch.cat( [features, features])
-        combined_weight   = torch.cat( [weight_sm  / torch.mean(weight_sm), weight_bsm / torch.mean(weight_bsm)]) 
+        #combined_weight   = torch.cat( [weight_sm  / torch.mean(weight_sm), weight_bsm / torch.mean(weight_bsm)]) 
+        combined_weight   = torch.cat( [weight_sm, weight_bsm]) 
 
         combined_weight = torch.minimum( combined_weight, 1e3*torch.median(combined_weight)) # some regularization :) 
 

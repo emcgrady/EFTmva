@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import torch
+import os
 from torch.utils.data import DataLoader
 import numpy as np 
 from tqdm import tqdm
@@ -13,15 +14,19 @@ from utils.metrics import net_eval
 import torchvision.models as models
 from torch.profiler import profile, record_function, ProfilerActivity
 
-def save_and_plot(net, loss_test, loss_train, label, directory_name, bsm_name, test):
+def save_and_plot(net, loss_test, loss_train, label, bsm_name, test):
+
+    os.mkdir(f'{label}')
+
+    torch.save(net, f'{label}/network.p')
+    torch.save(net.state_dict(), f'{label}/network_state_dict.p')
 
     fig, ax = plt.subplots(1, 1, figsize=[8,8])
-    torch.save(net, f'{directory_name}/network_{bsm_name}_{label}.p')
-
+    
     ax.plot( range(len(loss_test)), loss_train, label="Training dataset")
     ax.plot( range(len(loss_test)), loss_test , label="Testing dataset")
     ax.legend()
-    fig.savefig(f'{directory_name}/loss_{label}.png')
+    fig.savefig(f'{label}/loss.png')
     plt.clf()
     
     fig, ax = plt.subplots(1, 1, figsize=[12,7])
@@ -34,7 +39,7 @@ def save_and_plot(net, loss_test, loss_train, label, directory_name, bsm_name, t
                            bins=bins, alpha=0.5, label='BSM', density=True)
     ax.set_xlabel('Network Output', fontsize=12)
     ax.legend()
-    fig.savefig(f'{directory_name}/net_out_{label}.png')
+    fig.savefig(f'{label}/net_out.png')
     plt.clf()
     
     roc, auc, a = net_eval(net(test[:][2]), test[:][0], test[:][1])
@@ -45,7 +50,7 @@ def save_and_plot(net, loss_test, loss_train, label, directory_name, bsm_name, t
     ax.legend()
     ax.set_xlabel('False Positive Rate', fontsize=14)
     ax.set_ylabel('True Positive Rate', fontsize=14)
-    fig.savefig(f'{directory_name}/ROC_{label}.png')
+    fig.savefig(f'{label}/ROC.png')
     plt.clf()
     
     fig, ax = plt.subplots(1, 1, figsize=[8,8])
@@ -56,12 +61,12 @@ def save_and_plot(net, loss_test, loss_train, label, directory_name, bsm_name, t
     ax.set_ylabel('True Positive Rate', fontsize=14)
     ax.set_xscale('log')
     ax.set_yscale('log')
-    fig.savefig(f'{directory_name}/ROC_{label}_log.png')
+    fig.savefig(f'{label}/ROC_log.png')
     plt.clf()
     
     plt.close()
     
-    f = open(f'{directory_name}/performance_{label}.txt','w+')
+    f = open(f'{label}/performance.txt','w+')
     f.write(    
         'Area under ROC: ' + str(auc) + '\n' + 
         'Accuracy:       ' + str(a) + '\n'
@@ -71,7 +76,6 @@ def save_and_plot(net, loss_test, loss_train, label, directory_name, bsm_name, t
 def main():
 
     args = handleOptions()
-
 
     # Now we decide how (if) we will use the gpu
     if args.device != 'cpu' and not torch.cuda.is_available():
@@ -107,7 +111,7 @@ def main():
                         loss = model.cost_from_batch(features, sm_weight, bsm_weight, args.device)
                         loss.backward()
                         optimizer.step()
-                text_file = open(f'{args.name}/network_profile.txt', 'w')
+                text_file = open(f'network_profile.txt', 'w')
                 n = text_file.write(prof.key_averages().table(sort_by='cpu_time_total'))
                 text_file.close()
             else: 
@@ -118,10 +122,10 @@ def main():
         loss_train.append( model.cost_from_batch(train[:][2], train[:][0], train[:][1], args.device).item())
         loss_test .append( model.cost_from_batch(test[:][2] , test[:][0], test[:][1], args.device).item())
         scheduler.step(loss_train[epoch])
-        if epoch%200==0: 
-            save_and_plot( model.net, loss_test, loss_train, f"epoch_{epoch}", f"{args.name}", signal_dataset.bsm_name, test)
+        if epoch%50==0: 
+            save_and_plot( model.net, loss_test, loss_train, f"epoch_{epoch}", signal_dataset.bsm_name, test)
             
-    save_and_plot( model.net, loss_test, loss_train, "last", f"{args.name}", signal_dataset.bsm_name, test)
+    save_and_plot( model.net, loss_test, loss_train, "last", signal_dataset.bsm_name, test)
     
 if __name__=="__main__":
     main()

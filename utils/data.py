@@ -1,10 +1,14 @@
-import os
-import glob
-import torch
+from torch.utils.data import DataLoader
+
 import torch.utils.data as data
-import uproot
 import numpy as np 
+
+import uproot
+import torch
+import glob
 import tqdm
+import os
+
 
 class eftDataLoader( data.Dataset ):
     def __init__(self, args):
@@ -49,7 +53,7 @@ class eftDataLoader( data.Dataset ):
     def build_tensors( self ):
 
         if self.term is not None:
-            self.bsm_name = "bsm_weight" +  self.term
+            self.bsm_name = "bsm_weight_" +  self.term
         else:
             self.bsm_name = "bsm_weight_" + self.bsm_point.replace("=","_").replace(":","_")
 
@@ -84,19 +88,35 @@ class eftDataLoader( data.Dataset ):
                 eft_coefficients=events["EFTfitCoefficients"].array()
 
             if redoSM:
+                #filter out small quadratic terms
                 sm_weight = eft_coefficients[:,0].to_numpy()
                 outputs['sm_weight']  = np.append( outputs['sm_weight'], sm_weight )
 
             if redoBSM:
                 if self.term is not None:
-                    bsm_weight = eft_coefficients[:,self.coef_map[tuple(self.term.split("_"))]].to_numpy()
+                    quad_term = eft_coefficients[:,self.coef_map[tuple(self.term.split("_"))]].to_numpy()
+                    quad_term[np.abs(quad_term/sm_weight) < 1e-4] = 0
+                    
+                    bsm_weight = quad_term
                 else:
                     coef_values = self.bsm_point.split(':')
                     bsm_weight = eft_coefficients[:,0].to_numpy()
                     for i1, coef_value in enumerate(coef_values):
                         coef,value = coef_value.split("="); value = float(value)
-                        bsm_weight += eft_coefficients[:,self.coef_map[(coef,'sm')]].to_numpy()*value       # linear term
-                        bsm_weight += eft_coefficients[:,self.coef_map[(coef,coef)]].to_numpy()*value*value # quadratic term
+
+                        #filter out small linear terms
+
+                        linr_term = eft_coefficients[:,self.coef_map[(coef,'sm')]].to_numpy()
+                        linr_term[np.abs(linr_term/sm_weight) < 1e-4] = 0
+                        
+                        bsm_weight += linr_term*value       # linear term
+
+                        #filter out small quadratic terms
+                        quad_term = eft_coefficients[:,self.coef_map[(coef,coef)]].to_numpy()
+                        quad_term[np.abs(quad_term/sm_weight) < 1e-4] = 0
+                        
+                        bsm_weight += quad_term*value*value # quadratic term
+                        
                         for i2, coef_value2 in enumerate(coef_values):
                             if i2 >= i1: continue
                             coef2,value2 = coef_value2.split("="); value2=float(value2)

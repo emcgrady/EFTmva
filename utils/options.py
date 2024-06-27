@@ -28,11 +28,8 @@ def parse(parser):
     else:
         config = {}
     config = {**config, **vars(args)}
-    
-    os.system(f"mkdir -p {args.name}")
 
-
-    with open(f"{args.name}/config.yml","w") as f:
+    with open(f"config.yml","w") as f:
         f.write( yaml.dump(config)) 
 
     for op, val in config.items():
