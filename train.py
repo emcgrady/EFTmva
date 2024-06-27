@@ -19,7 +19,7 @@ def save_and_plot(net, loss_test, loss_train, label, bsm_name, test):
     try:
         os.mkdir(f'{label}')
     except:
-        continue
+        pass
 
     torch.save(net, f'{label}/network.p')
     torch.save(net.state_dict(), f'{label}/network_state_dict.p')
