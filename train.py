@@ -16,7 +16,10 @@ from torch.profiler import profile, record_function, ProfilerActivity
 
 def save_and_plot(net, loss_test, loss_train, label, bsm_name, test):
 
-    os.mkdir(f'{label}')
+    try:
+        os.mkdir(f'{label}')
+    except:
+        continue
 
     torch.save(net, f'{label}/network.p')
     torch.save(net.state_dict(), f'{label}/network_state_dict.p')
