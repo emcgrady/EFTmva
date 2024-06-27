@@ -30,10 +30,9 @@ class Model:
         weight_bsm = torch.maximum(weight_bsm, torch.tensor(0))
         
         combined_features = torch.cat( [features, features])
-        #combined_weight   = torch.cat( [weight_sm  / torch.mean(weight_sm), weight_bsm / torch.mean(weight_bsm)]) 
         combined_weight   = torch.cat( [weight_sm, weight_bsm]) 
 
-        combined_weight = torch.minimum( combined_weight, 1e3*torch.median(combined_weight)) # some regularization :) 
+        combined_weight = torch.minimum( combined_weight, 1e3*torch.median(combined_weight))
 
         cost.weight = combined_weight
         return cost( self.net(combined_features).ravel(), self.label.expand(2, weight_sm.shape[0]).ravel())
