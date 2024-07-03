@@ -68,12 +68,12 @@ def save_and_plot(net, loss_test, loss_train, label, bsm_name, test):
     plt.clf()
     
     plt.close()
+
+    auc = auc.data.cpu().numpy()
+    a   = a.data.cpu().numpy()
     
     f = open(f'{label}/performance.txt','w+')
-    f.write(    
-        'Area under ROC: ' + str(auc) + '\n' + 
-        'Accuracy:       ' + str(a) + '\n'
-    )
+    f.write(f'Area under ROC: {auc}\nAccuracy:       {a}\n')
     f.close()
 
 def main():
