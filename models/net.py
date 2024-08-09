@@ -13,7 +13,7 @@ class Net(nn.Module):
             nn.ReLU(True),
             nn.Linear(16, 8),
             nn.ReLU(True),
-            nn.Linear(8, 1 ),
+            nn.Linear(8, 1),
             nn.Sigmoid(),
         )
         self.main_module.to(device)
@@ -24,15 +24,10 @@ class Net(nn.Module):
 class Model:
     def __init__(self, features, device):
         self.net  = Net(features, device=device)
-        self.label = torch.tensor([[0],[1]], device=device, dtype=torch.float32)
+        self.label = torch.tensor([[0],[1]], device=device, dtype=torch.float64)
 
-    def cost_from_batch(self, features, weight_sm, weight_bsm, device ): 
-        weight_bsm = torch.maximum(weight_bsm, torch.tensor(0))
-        
+    def cost_from_batch(self, features, weight_sm, weight_bsm, sm_mean, bsm_mean, device ): 
         combined_features = torch.cat( [features, features])
-        combined_weight   = torch.cat( [weight_sm /torch.mean(weight_sm), weight_bsm/torch.mean(weight_bsm)]) 
-
-        combined_weight = torch.minimum( combined_weight, 1e3*torch.median(combined_weight))
-
-        cost.weight = combined_weight
+        cost.weight   = torch.cat( [weight_sm /sm_mean, weight_bsm/bsm_mean]) 
+        
         return cost( self.net(combined_features).ravel(), self.label.expand(2, weight_sm.shape[0]).ravel())

@@ -9,7 +9,7 @@ def commonOptions():
     parser.add_argument("--files",type=str, default="/pnfs/psi.ch/cms/trivcat/store/user/sesanche//EFT_mva/ttbar/NanoGen_tt_LO_SMEFTrwgt_v2_postprocess/*.root", help="List of files to process");
     parser.add_argument("--reload",  action='store_true', default=False, help="Force conversion of hdf to pytorch")
     parser.add_argument("--device", type=str, default='cpu', help="Which device (cpu, gpu index) to use ");
-    parser.add_argument("--name", type=str, default="v1", help="Name to store net.");
+    parser.add_argument("--name", type=str, default="", help="Name to store net.");
     parser.add_argument("--wc-list", type=str, default="sm,ctu1,cqd1,cqq13,ctu8,cqu1,cqq11,cqq83,ctd1,ctd8,ctg,ctq1,cqq81,cqu8,cqd8,ctq8", help="Comma-separated of WC in the sample (by order)")
     parser.add_argument("--features", type=str, default="Lep1_pt,Lep2_pt,Lep1_eta,Lep2_eta,Lep1_phi,Lep2_phi,nJet30,jet1_pt,jet2_pt", help="Comma-separated of WC in the sample (by order)")
     parser.add_argument("--forceRebuild", action="store_true", default=False, help="Force reproduction of torch tensors from rootfiles")
@@ -52,14 +52,14 @@ def handleOptions():
 
 def rocOptions():
     parser = commonOptions()
-    parser.add_argument("--likelihood", type=str, default=None, 
-                        help="yaml file containing information needed for building likeliood")
+    parser.add_argument("--parametric", type=str, default=None, 
+                        help="yaml file containing information needed for parametric likeliood")
     parser.add_argument("--bsm-point",  type=str, default=None, 
                         help="BSM point that is going to be signal in the roc curve")
     parser.add_argument("--term",  type=str, default=None,
                         help="Term that is going to be signal in the roc curve")
     parser.add_argument("--dedicated",  type=str, default=None, 
-                        help="Path to a network trained against an specific BSM point ")
+                        help="yaml file containing information needed for dedicated likeliood")
     
     
     return parse(parser)

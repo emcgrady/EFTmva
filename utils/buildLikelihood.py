@@ -5,11 +5,13 @@ import numpy as np
 class likelihood_term:
     # Use the ALICE method (1808.00973) to estimate the likelihood ratio
     # Needs a net trained with cross entropy as an input
-    def __init__(self, input_net):
+    def __init__(self, input_net, norm):
         self.input_net = input_net
+        self.norm = norm
     def __call__(self, features):
+        features = features.to(torch.float64)
         score = self.input_net(features)
-        return (1-score)/score
+        return self.norm*score/(1-score)
 
 class linear_term:
     # extracts the linear term from the quadratic term and the likelihood ratio evaluated at a given point
@@ -41,13 +43,15 @@ class full_likelihood:
         self.wcs = self.configuration['wcs'].split(",")
         self.quadratic = {}; self.linear={}; value_forlinear={}; net_forlinear={}
         self.no_lin = ['ctu1', 'cqd1', 'cqq13', 'cqu1', 'cqq11', 'ctd1', 'ctq1']
+        self.sm, self.linr, self.quad = self.configuration['means'].split(",")
+        self.sm = float(self.sm); self.linr = float(self.linr); self.quad = float(self.quad)
         
         for wc in self.wcs:
-            self.quadratic[wc] = likelihood_term(torch.load(self.configuration[f'{wc}_quad'], map_location=torch.device('cpu')))
+            self.quadratic[wc] = likelihood_term(torch.load(self.configuration[f'{wc}_quad'], map_location=torch.device('cpu')), self.quad/self.sm)
             if wc not in self.no_lin:
                 value_forlinear[wc], net_forlinear[wc] = self.configuration[f'{wc}_forlinear'].split(",")
                 self.linear[wc] = linear_term(self.quadratic[wc], 
-                                              likelihood_term(torch.load(net_forlinear[wc])), 
+                                              likelihood_term(torch.load(net_forlinear[wc]), self.linr/self.sm), 
                                               value_forlinear[wc])
                                                                               
         if len(self.wcs) > 1:

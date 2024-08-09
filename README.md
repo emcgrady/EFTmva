@@ -42,10 +42,10 @@ The data is provided through `rootfiles` that are converted to `pytorch` tensors
 
 The example above allows to parametrize the likelihood as a function of `ctq8`. The procedure to do so is implemented in `utils/buildLikelihood.py` (modulo cross-terms in the likelihood, to do), which takes a `yaml` file describing the networks trained in the previous step.
 
-A ROC curve comparing a dedicated discriminator (the one trained against `ctq8=16`) against the optimal observable given by the regressed likelihood ratio. 
+A ROC curve comparing a dedicated discriminator (the one trained against `ctq8=12`) against the optimal observable given by the regressed likelihood ratio. 
 
 ```
-python do_roc.py --likelihood examples/ctq8_regression.yaml  --bsm-point ctq8=16   --dedicated ctq8_16/network_bsm_weight_ctq8_16_last.p --name regressed_likelihood_16
+python do_roc.py --parametric examples/ctq8_parametric.yaml  --bsm-point ctq8=12   --dedicated examples/ctq8_dedicated.yaml --name regressed_likelihood_16
 ```
 
 ## To do

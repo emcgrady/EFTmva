@@ -96,22 +96,23 @@ def main():
     # now we get the data
     from utils.data import eftDataLoader
     signal_dataset = eftDataLoader( args )
+    sm_mean = torch.mean(signal_dataset.sm_weight); bsm_mean = torch.mean(signal_dataset.bsm_weight)
     train, test    = torch.utils.data.random_split( signal_dataset, [0.7, 0.3], generator=torch.Generator().manual_seed(42))
     dataloader     = DataLoader(  train  , batch_size=args.batch_size, shuffle=True)
 
 
     optimizer = optim.SGD(model.net.parameters(), lr=args.learning_rate, momentum=args.momentum)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', verbose=True)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
 
-    loss_train = [model.cost_from_batch(train[:][2] , train[:][0], train[:][1], args.device).item()]
-    loss_test  = [model.cost_from_batch(test[:][2] , test[:][0], test[:][1], args.device).item()]
+    loss_train = [model.cost_from_batch(train[:][2] , train[:][0], train[:][1], sm_mean, bsm_mean,  args.device).item()]
+    loss_test  = [model.cost_from_batch(test[:][2] , test[:][0], test[:][1], sm_mean, bsm_mean,  args.device).item()]
     for epoch in tqdm(range(args.epochs)):
         for i,(sm_weight, bsm_weight, features) in enumerate(dataloader):
             if args.profile and ((epoch == 0) and (i == 0)):
                 with profile(activities=[ProfilerActivity.CPU], record_shapes=True) as prof:
                     with record_function('model_inference'):
                         optimizer.zero_grad()
-                        loss = model.cost_from_batch(features, sm_weight, bsm_weight, args.device)
+                        loss = model.cost_from_batch(features, sm_weight, bsm_weight, sm_mean, bsm_mean,  args.device)
                         loss.backward()
                         optimizer.step()
                 text_file = open(f'network_profile.txt', 'w')
@@ -119,16 +120,16 @@ def main():
                 text_file.close()
             else: 
                 optimizer.zero_grad()
-                loss = model.cost_from_batch(features, sm_weight, bsm_weight, args.device)
+                loss = model.cost_from_batch(features, sm_weight, bsm_weight, sm_mean, bsm_mean,  args.device)
                 loss.backward()
                 optimizer.step()
-        loss_train.append( model.cost_from_batch(train[:][2], train[:][0], train[:][1], args.device).item())
-        loss_test .append( model.cost_from_batch(test[:][2] , test[:][0], test[:][1], args.device).item())
+        loss_train.append( model.cost_from_batch(train[:][2], train[:][0], train[:][1], sm_mean, bsm_mean,  args.device).item())
+        loss_test .append( model.cost_from_batch(test[:][2] , test[:][0], test[:][1], sm_mean, bsm_mean,  args.device).item())
         scheduler.step(loss_train[epoch])
         if epoch%50==0: 
-            save_and_plot( model.net, loss_test, loss_train, f"epoch_{epoch}", signal_dataset.bsm_name, test)
+            save_and_plot( model.net, loss_test, loss_train, f"{args.name}epoch_{epoch}", signal_dataset.bsm_name, test)
             
-    save_and_plot( model.net, loss_test, loss_train, "last", signal_dataset.bsm_name, test)
+    save_and_plot( model.net, loss_test, loss_train, f"{args.name}last", signal_dataset.bsm_name, test)
     
 if __name__=="__main__":
     main()

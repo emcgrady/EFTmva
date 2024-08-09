@@ -13,9 +13,9 @@ import os
 class eftDataLoader( data.Dataset ):
     def __init__(self, args):
 
-        self.files = glob.glob(args.files)
+        self.files   = glob.glob(args.files)
         self.wc_list = args.wc_list.split(",")
-        self.dtype       = np.float32 # could be configurable
+        self.dtype   = np.float64
         
         if args.term is None and args.bsm_point is None:
             raise RuntimeError("You need to decide whether you get the weights associated to a given term or to a given bsm point")
@@ -100,7 +100,8 @@ class eftDataLoader( data.Dataset ):
                     bsm_weight = quad_term
                 else:
                     coef_values = self.bsm_point.split(':')
-                    bsm_weight = eft_coefficients[:,0].to_numpy()
+                    bsm_weight  = eft_coefficients[:,0].to_numpy()
+                    sm_weight   = eft_coefficients[:,0].to_numpy()
                     for i1, coef_value in enumerate(coef_values):
                         coef,value = coef_value.split("="); value = float(value)
 
