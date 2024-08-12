@@ -17,6 +17,7 @@ class Net(nn.Module):
             nn.Sigmoid(),
         )
         self.main_module.to(device)
+        self.main_module.type(torch.float64)
     def forward(self, x):
         return self.main_module(x)
             
@@ -27,7 +28,10 @@ class Model:
         self.label = torch.tensor([[0],[1]], device=device, dtype=torch.float64)
 
     def cost_from_batch(self, features, weight_sm, weight_bsm, sm_mean, bsm_mean, device ): 
+
+        
         combined_features = torch.cat( [features, features])
+
         cost.weight   = torch.cat( [weight_sm /sm_mean, weight_bsm/bsm_mean]) 
         
         return cost( self.net(combined_features).ravel(), self.label.expand(2, weight_sm.shape[0]).ravel())
