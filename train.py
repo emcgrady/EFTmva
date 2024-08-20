@@ -78,6 +78,8 @@ def save_and_plot(net, loss_test, loss_train, label, bsm_name, test):
 
 def main():
 
+    torch.manual_seed(42)
+
     args = handleOptions()
 
     # Now we decide how (if) we will use the gpu
