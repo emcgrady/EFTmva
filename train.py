@@ -104,7 +104,7 @@ def main():
 
 
     optimizer = optim.SGD(model.net.parameters(), lr=args.learning_rate, momentum=args.momentum)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=args.factor, patience=args.patience)
 
     loss_train = [model.cost_from_batch(train[:][2] , train[:][0], train[:][1], sm_mean, bsm_mean,  args.device).item()]
     loss_test  = [model.cost_from_batch(test[:][2] , test[:][0], test[:][1], sm_mean, bsm_mean,  args.device).item()]
