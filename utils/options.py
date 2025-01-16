@@ -47,6 +47,8 @@ def handleOptions():
     parser.add_argument("--learning-rate", type=float, default=0.00000005, help="Optimizer learning rate")
     parser.add_argument("--momentum", type=float, default=0.9, help="Momentum for optimizer")
     parser.add_argument("--profile", type=bool, default=False, help="Set to True to profile the network")
+    parser.add_argument("--factor", type=float, default=0.1, help="Factor for lr scheduler")
+    parser.add_argument("--patience", type=float, default=10, help="Number of epochs required for lr adjustment")
 
     return parse(parser)
 
