@@ -25,13 +25,12 @@ class Net(nn.Module):
 class Model:
     def __init__(self, features, device):
         self.net  = Net(features, device=device)
-        self.label = torch.tensor([[0],[1]], device=device, dtype=torch.float64)
+        self.bkg  = torch.tensor([0], device=device, dtype=torch.float64)
+        self.sgnl = torch.tensor([1], device=device, dtype=torch.float64)
 
-    def cost_from_batch(self, features, weight_sm, weight_bsm, sm_mean, bsm_mean, device ): 
-
+    def cost_from_batch(self, features, weight_sm, weight_bsm, sm_mean, bsm_mean, device ):
+        half_length = features.size(0) // 2
+        cost.weight = torch.cat( [weight_sm[:half_length] /sm_mean, weight_bsm[half_length:]/bsm_mean]) 
+        targets     = torch.cat([self.bkg.expand(1, half_length), self.sgnl.expand(1, features.size(0) - half_length)]).ravel()
         
-        combined_features = torch.cat( [features, features])
-
-        cost.weight   = torch.cat( [weight_sm /sm_mean, weight_bsm/bsm_mean]) 
-        
-        return cost( self.net(combined_features).ravel(), self.label.expand(2, weight_sm.shape[0]).ravel())
+        return cost(self.net(features).ravel(), targets)
