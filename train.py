@@ -30,6 +30,8 @@ def save_and_plot(net, loss_test, loss_train, label, bsm_name, test):
     ax.plot( range(len(loss_test)), loss_test , label="Testing dataset")
     ax.legend()
     fig.savefig(f'{label}/loss.png')
+    ax.set_yscale('log')
+    fig.savefig(f'{label}/loss_log.png')
     plt.clf()
     
     fig, ax = plt.subplots(1, 1, figsize=[12,7])
