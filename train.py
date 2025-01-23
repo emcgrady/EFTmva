@@ -15,7 +15,15 @@ import torchvision.models as models
 from torch.profiler import profile, record_function, ProfilerActivity
 
 def save_and_plot(net, loss_test, loss_train, label, bsm_name, test):
-
+    '''
+    creates a directory with the label name and saves the network, the loss plot, the network output plot, the ROC curve and the performance metrics
+        net: neural network
+        loss_test: loss on the test dataset
+        loss_train: loss on the training dataset
+        label: name of the directory
+        bsm_name: name of the BSM term
+        test: test dataset
+    '''
     try:
         os.mkdir(f'{label}')
     except:
