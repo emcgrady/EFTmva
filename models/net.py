@@ -30,7 +30,10 @@ class Model:
 
     def cost_from_batch(self, features, weight_sm, weight_bsm, sm_mean, bsm_mean, device ):
         half_length = features.size(0) // 2
+        print([weight_sm[:half_length].shape, weight_bsm[half_length:].shape])
+        print(self.bkg.expand(1, half_length).shape, self.sgnl.expand(1, features.size(0) - half_length).shape)
+
         cost.weight = torch.cat( [weight_sm[:half_length] /sm_mean, weight_bsm[half_length:]/bsm_mean]) 
-        targets     = torch.cat([self.bkg.expand(1, half_length), self.sgnl.expand(1, features.size(0) - half_length)]).ravel()
+        targets     = torch.cat([self.bkg.expand(1, half_length), self.sgnl.expand(1, features.size(0) - half_length)], axis=1).ravel()
         
         return cost(self.net(features).ravel(), targets)
